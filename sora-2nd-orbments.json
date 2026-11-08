@@ -1,0 +1,790 @@
+{
+  "schema_version": 1,
+  "game": "空之轨迹 the 2nd",
+  "edition": "2026 remake; not the original Trails in the Sky SC",
+  "retrieved_on": "2026-11-08",
+  "elements": [
+    "地",
+    "水",
+    "火",
+    "风",
+    "时",
+    "空",
+    "幻"
+  ],
+  "rules_source": "https://www.falcom.co.jp/manual/sora2/page/07/04.html",
+  "verification": "two_web_sources_agree; not_game_extracted",
+  "characters": [
+    {
+      "id": "estelle",
+      "name": "艾丝蒂尔",
+      "name_ja": "エステル",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": null
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "1-3",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        },
+        {
+          "id": "2-3",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2",
+          "1-3"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2",
+          "2-3"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%A8%E3%82%B9%E3%83%86%E3%83%AB"
+      ]
+    },
+    {
+      "id": "joshua",
+      "name": "约书亚",
+      "name_ja": "ヨシュア",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "时"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "1-3",
+          "required_element": "时"
+        },
+        {
+          "id": "1-4",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2",
+          "1-3",
+          "1-4"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%83%A8%E3%82%B7%E3%83%A5%E3%82%A2"
+      ]
+    },
+    {
+      "id": "scherazard",
+      "name": "雪拉扎德",
+      "name_ja": "シェラザード",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "风"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": "风"
+        },
+        {
+          "id": "2-3",
+          "required_element": null
+        },
+        {
+          "id": "2-4",
+          "required_element": null
+        },
+        {
+          "id": "2-5",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2",
+          "2-3",
+          "2-4",
+          "2-5"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%B7%E3%82%A7%E3%83%A9%E3%82%B6%E3%83%BC%E3%83%89"
+      ]
+    },
+    {
+      "id": "olivier",
+      "name": "奥利维尔",
+      "name_ja": "オリビエ",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "幻"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "1-3",
+          "required_element": null
+        },
+        {
+          "id": "1-4",
+          "required_element": null
+        },
+        {
+          "id": "1-5",
+          "required_element": null
+        },
+        {
+          "id": "1-6",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2",
+          "1-3",
+          "1-4",
+          "1-5",
+          "1-6"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%AA%E3%83%AA%E3%83%93%E3%82%A8"
+      ]
+    },
+    {
+      "id": "kloe",
+      "name": "克萝赛",
+      "name_ja": "クローゼ",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "水"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "1-3",
+          "required_element": null
+        },
+        {
+          "id": "1-4",
+          "required_element": "水"
+        },
+        {
+          "id": "1-5",
+          "required_element": null
+        },
+        {
+          "id": "1-6",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2",
+          "1-3",
+          "1-4",
+          "1-5",
+          "1-6"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%BC"
+      ]
+    },
+    {
+      "id": "agate",
+      "name": "阿加特",
+      "name_ja": "アガット",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "火"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        },
+        {
+          "id": "3-1",
+          "required_element": "火"
+        },
+        {
+          "id": "3-2",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2"
+        ],
+        [
+          "center",
+          "3-1",
+          "3-2"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%A2%E3%82%AC%E3%83%83%E3%83%88"
+      ]
+    },
+    {
+      "id": "tita",
+      "name": "缇妲",
+      "name_ja": "ティータ",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "空"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": "空"
+        },
+        {
+          "id": "2-3",
+          "required_element": null
+        },
+        {
+          "id": "3-1",
+          "required_element": null
+        },
+        {
+          "id": "3-2",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2",
+          "2-3"
+        ],
+        [
+          "center",
+          "3-1",
+          "3-2"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%83%86%E3%82%A3%E3%83%BC%E3%82%BF"
+      ]
+    },
+    {
+      "id": "zin",
+      "name": "阵",
+      "name_ja": "ジン",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "地"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "3-1",
+          "required_element": null
+        },
+        {
+          "id": "4-1",
+          "required_element": "地"
+        },
+        {
+          "id": "4-2",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2"
+        ],
+        [
+          "center",
+          "2-1"
+        ],
+        [
+          "center",
+          "3-1"
+        ],
+        [
+          "center",
+          "4-1",
+          "4-2"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%B8%E3%83%B3"
+      ]
+    },
+    {
+      "id": "kurt",
+      "name": "克鲁茨",
+      "name_ja": "クルツ",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "时"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        },
+        {
+          "id": "2-3",
+          "required_element": null
+        },
+        {
+          "id": "2-4",
+          "required_element": null
+        },
+        {
+          "id": "2-5",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2",
+          "2-3",
+          "2-4",
+          "2-5"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%AF%E3%83%AB%E3%83%84"
+      ]
+    },
+    {
+      "id": "annelace",
+      "name": "亚妮拉丝",
+      "name_ja": "アネラス",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "风"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        },
+        {
+          "id": "3-1",
+          "required_element": null
+        },
+        {
+          "id": "3-2",
+          "required_element": "风"
+        },
+        {
+          "id": "3-3",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2"
+        ],
+        [
+          "center",
+          "3-1",
+          "3-2",
+          "3-3"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%A2%E3%83%8D%E3%83%A9%E3%82%B9"
+      ]
+    },
+    {
+      "id": "josette",
+      "name": "乔丝特",
+      "name_ja": "ジョゼット",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "地"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": "地"
+        },
+        {
+          "id": "1-3",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        },
+        {
+          "id": "2-3",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2",
+          "1-3"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2",
+          "2-3"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%B8%E3%83%A7%E3%82%BC%E3%83%83%E3%83%88"
+      ]
+    },
+    {
+      "id": "julia",
+      "name": "尤莉亚上尉",
+      "name_ja": "ユリア",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "空"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": "空"
+        },
+        {
+          "id": "2-2",
+          "required_element": null
+        },
+        {
+          "id": "2-3",
+          "required_element": null
+        },
+        {
+          "id": "2-4",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2"
+        ],
+        [
+          "center",
+          "2-1",
+          "2-2",
+          "2-3",
+          "2-4"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%83%A6%E3%83%AA%E3%82%A2"
+      ]
+    },
+    {
+      "id": "mueller",
+      "name": "穆拉少校",
+      "name_ja": "ミュラー",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "水"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        },
+        {
+          "id": "3-1",
+          "required_element": null
+        },
+        {
+          "id": "3-2",
+          "required_element": null
+        },
+        {
+          "id": "4-1",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2"
+        ],
+        [
+          "center",
+          "2-1"
+        ],
+        [
+          "center",
+          "3-1",
+          "3-2"
+        ],
+        [
+          "center",
+          "4-1"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%83%9F%E3%83%A5%E3%83%A9%E3%83%BC"
+      ]
+    },
+    {
+      "id": "kevin",
+      "name": "凯文神父",
+      "name_ja": "ケビン",
+      "center_slot": "center",
+      "slots": [
+        {
+          "id": "center",
+          "required_element": "时"
+        },
+        {
+          "id": "1-1",
+          "required_element": null
+        },
+        {
+          "id": "1-2",
+          "required_element": null
+        },
+        {
+          "id": "1-3",
+          "required_element": null
+        },
+        {
+          "id": "1-4",
+          "required_element": null
+        },
+        {
+          "id": "1-5",
+          "required_element": null
+        },
+        {
+          "id": "2-1",
+          "required_element": null
+        }
+      ],
+      "lines": [
+        [
+          "center",
+          "1-1",
+          "1-2",
+          "1-3",
+          "1-4",
+          "1-5"
+        ],
+        [
+          "center",
+          "2-1"
+        ]
+      ],
+      "sources": [
+        "https://guide.ludens.com.tw/sora-2nd/orbment/",
+        "https://kamikouryaku.net/soranokiseki2/?%E3%82%B1%E3%83%93%E3%83%B3"
+      ]
+    }
+  ]
+}
