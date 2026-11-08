@@ -1,6 +1,6 @@
 # 空之轨迹 the 2nd 导力器求解器
 
-原生 HTML / CSS / JavaScript 页面，无需安装依赖。使用仓库已有的角色 JSON 和制表符分隔回路文件；本轮仅实现界面，不实现求解算法、配装合法性判断或魔法规则。
+原生 HTML / CSS / JavaScript 页面，无需安装依赖。使用仓库已有的角色 JSON 和制表符分隔回路文件，在浏览器本地按 `SOLVER_RULES.md` 搜索合法最小配置。
 
 ## 本地启动
 
@@ -17,12 +17,14 @@ npm run dev
 - 角色选择、按角色数据绘制链条、中央孔与属性限定提示。
 - 地、水、火、风、时、空、幻七种非负整数属性需求。
 - 可搜索的回路多选下拉框、必选与排除互斥、标签移除、条件重置。
-- 待配置、求解中、待接入、无解、结果及错误状态。
+- 待配置、求解中、无解、结果、搜索截断及错误状态。
+- 孔位限定、刃盾理分类限制、功能系列全局互斥、必选与排除校验。
+- 不可再删和向下替换检查、同链位置及逐回路等属性去重；第 21 个不同策略出现时停止并返回前 20 个。
 - 窄屏布局、键盘操作、表单校验。条件改变时取消旧请求，避免旧结果覆盖新条件。
 
 ## 求解接口
 
-替换 `src/solver.js` 中的异步 `solveOrbment(request, context)` 即可，页面无需调整。默认返回 `not-implemented`，不提供模拟结果。
+`src/solver.js` 提供异步 `solveOrbment(request, context)`。功能系列的明确名称映射位于 `src/quartz-families.js`；未列入升级系列的回路各自独立成系，同名仍不能重复装备。
 
 请求示例：
 
@@ -35,18 +37,18 @@ npm run dev
 }
 ```
 
-当前一个请求代表一组需由同一条链达到的最低属性值。回路 ID 使用数据中唯一的名称；未来若数据提供稳定 ID，应同步替换解析器与算法。`context.characters` 为原始角色数据；`context.quartz` 包含 `{ id, name, element, attributes }`；`context.signal` 用于取消请求。后端接入可使用 `fetch('/api/solve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request), signal: context.signal })`，并检查 HTTP 状态。
+当前一个请求代表一组需由同一条链达到的最低属性值。回路 ID 使用数据中唯一的名称。`context.characters` 为原始角色数据；`context.quartz` 包含 `{ id, name, element, attributes }`，数组顺序决定等属性方案的展示优先级；`context.signal` 用于取消请求。搜索定期让出主线程，取消时抛出 `AbortError`。
 
 响应约定：
 
 ```js
-// 未接入
-{ status: 'not-implemented', solutions: [], message: '求解器尚未接入' }
 // 无解
 { status: 'no-solution', solutions: [], message: '可选说明' }
-// 有解（以下仅表示数据结构，实际应返回角色全部孔位与链条）
+// 有解（以下仅表示数据结构；空孔省略，返回所有链及完整七项属性）
 {
   status: 'solved',
+  truncated: false,
+  message: '完整搜索，共 1 个策略。',
   solutions: [{
     id: 'solution-1',
     slots: [{ slotId: 'center', quartzId: '防御1' }],
@@ -55,6 +57,8 @@ npm run dev
 }
 ```
 
-算法负责属性汇总、孔位限制、重复装备限制及所有游戏规则。页面只展示返回的方案与链属性，不推导可行性。异常可以直接抛出，由界面显示错误。
+超过 20 个策略时返回 `truncated: true` 和消息「超过 20 个，已停止搜索」。恰好 20 个时继续检查剩余搜索空间，只有完整搜索后才能返回 `truncated: false`。无解时不降低目标。非法请求（例如未知角色、非法属性值）抛出异常，由界面显示错误。
 
-执行 `npm test` 可检查真实数据解析与默认接口行为。
+算法先分配必选回路，再按候选达标链搜索可选回路组合：最小解中，达标链以外的非必选回路必然可以删除。链成员关系相同的孔合并搜索，展示时通过孔位匹配还原合法排列。候选结果逐项检查删减与向下替换，等属性名称则联合检查互斥及孔位规则后优先选取表格靠前的合法最小方案。困难条件仍可能需要较长搜索时间，可修改条件取消。
+
+执行 `npm test` 可检查真实数据解析、规则边界、搜索截断、取消行为及小规模穷举对照。

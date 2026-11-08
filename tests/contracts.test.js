@@ -18,11 +18,9 @@ test('仓库数据可用于所有选择列表，回路 ID 唯一且属性被完�
   });
 });
 
-test('默认接口明确返回未实现，不提供虚构配置；支持取消', async () => {
+test('接口拒绝未知角色，支持取消', async () => {
   const request = { characterId: 'estelle', minimumAttributes: { 水: 3 }, requiredQuartzIds: [], excludedQuartzIds: [] };
-  const response = await solveOrbment(request, { characters: [], quartz: [] });
-  assert.equal(response.status, 'not-implemented');
-  assert.deepEqual(response.solutions, []);
+  await assert.rejects(solveOrbment(request, { characters: [], quartz: [] }), /未知角色/);
   const controller = new AbortController(); controller.abort();
   await assert.rejects(solveOrbment(request, { characters: [], quartz: [], signal: controller.signal }), { name: 'AbortError' });
 });
