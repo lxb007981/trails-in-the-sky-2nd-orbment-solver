@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ee">
+  <title>空之轨迹 2nd 导力器求解器</title>
+  <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+  <main>
+    <form id="config-form">
+      <header class="toolbar">
+        <h1>空之轨迹 2nd 导力器求解器</h1>
+        <div class="toolbar-controls">
+          <div class="character-field"><label for="character">角色</label><select id="character" disabled><option>正在读取角色…</option></select></div>
+          <button class="primary-button" id="solve" type="submit" disabled>计算</button>
+          <button type="button" id="reset">重置</button>
+        </div>
+      </header>
+      <p class="status-line">求解器尚未接入。</p>
+      <div class="quartz-fields">
+        <section class="panel"><h2 id="required-label">必选结晶回路</h2><div id="required-picker" aria-labelledby="required-label"></div></section>
+        <section class="panel"><h2 id="excluded-label">禁用结晶回路</h2><div id="excluded-picker" aria-labelledby="excluded-label"></div></section>
+      </div>
+      <div class="configuration-grid">
+        <section class="panel attributes-panel">
+          <h2>目标属性值</h2><div class="elements" id="elements"></div>
+          <p class="field-help">同一条链需达到的最低属性值；0 表示不限制。</p><p id="condition-summary">尚未设置属性需求</p>
+        </section>
+        <section class="panel character-panel">
+          <div class="section-heading"><h2>导力器链条</h2><div id="character-info"></div></div>
+          <div class="orbment" id="orbment" aria-label="角色导力器链条示意"></div><div id="line-legend" class="line-legend"></div>
+          <p class="field-help">中央孔由所有链共用。孔位边框颜色表示限定属性。</p>
+        </section>
+      </div>
+    </form>
+    <section class="results-panel">
+      <div class="section-heading"><h2>配置结果</h2><span class="status-badge" id="result-badge">等待配置</span></div>
+      <div id="results" aria-live="polite"><div class="empty-state"><p>设置条件后点击「计算」。</p></div></div>
+    </section>
+  </main>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
