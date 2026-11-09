@@ -8,7 +8,7 @@ http.createServer(async (req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     const file = resolve(root, '.' + (path === '/' ? '/index.html' : path));
     const relative = file.slice(root.length + 1).replaceAll(sep, '/');
-    if (!file.startsWith(root + sep) || !(/^(index\.html|src\/[\w.-]+\.(js|css)|sora-2nd-(orbments\.json|quartz\.csv))$/).test(relative)) { res.writeHead(404).end(); return; }
+    if (!file.startsWith(root + sep) || !(/^(index\.html|src\/[\w.-]+\.(js|css)|sora-2nd-(orbments\.json|(?:quartz|arts)\.csv))$/).test(relative)) { res.writeHead(404).end(); return; }
     const content = await readFile(file);
     res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' }).end(content);
   } catch { res.writeHead(404).end('Not found'); }

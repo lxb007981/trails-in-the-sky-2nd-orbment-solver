@@ -52,6 +52,8 @@ input { min-width: 0; }
 .unavailable { opacity: .5; }
 .selected-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .selected-tags:empty::after { content: "未选择结晶回路。"; font-size: 14px; color: var(--muted); }
+#arts-picker .selected-tags:empty::after { content: "未选择魔法。"; }
+.arts-help { margin-bottom: 18px; }
 .tag { min-height: 32px; padding: 4px 10px; font-size: 14px; background: #eef4ff; border-color: #c5d7f4; }
 .tag span { margin-left: 8px; color: var(--muted); }
 .no-matches { padding: 12px; color: var(--muted); }

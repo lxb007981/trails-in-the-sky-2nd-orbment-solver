@@ -1,9 +1,9 @@
-import { loadData } from './data.js';
+import { loadData, completeAttributes } from './data.js';
 import { solveOrbment } from './solver.js';
 
 const $ = (selector) => document.querySelector(selector);
 const colors = { 地: '#b38a43', 水: '#5389ac', 火: '#c56852', 风: '#58997b', 时: '#8b719d', 空: '#be9c42', 幻: '#ab7b99' };
-const selected = { required: new Set(), excluded: new Set() };
+const selected = { required: new Set(), excluded: new Set(), arts: new Set() };
 let data, controller, revision = 0;
 const pickers = [];
 const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -40,14 +40,17 @@ function renderCharacter() {
 
 function createPicker(kind, title) {
   const root = $(`#${kind}-picker`);
-  const other = kind === 'required' ? 'excluded' : 'required';
-  root.innerHTML = `<details class="picker"><summary>${title}<span class="picker-count">0</span><span class="chevron">⌄</span></summary><div class="picker-popover"><input type="search" placeholder="搜索回路名称或属性…" aria-label="搜索${title}" class="quartz-search"><div class="quartz-options"></div></div></details><div class="selected-tags"></div>`;
+  const isArts = kind === 'arts';
+  const entries = isArts ? data.arts : data.quartz;
+  const noun = isArts ? '魔法' : '回路';
+  const otherSelection = isArts ? new Set() : selected[kind === 'required' ? 'excluded' : 'required'];
+  root.innerHTML = `<details class="picker"><summary>${title}<span class="picker-count">0</span><span class="chevron">⌄</span></summary><div class="picker-popover"><input type="search" placeholder="搜索${noun}名称或属性…" aria-label="搜索${title}" class="quartz-search"><div class="quartz-options"></div></div></details><div class="selected-tags"></div>`;
   const details = root.querySelector('details');
   const search = root.querySelector('input');
   function renderOptions() {
     const query = search.value.trim().toLowerCase();
-    const items = data.quartz.filter((quartz) => `${quartz.name}${quartz.element}`.toLowerCase().includes(query));
-    root.querySelector('.quartz-options').innerHTML = items.length ? items.map((quartz) => `<label class="quartz-option ${selected[other].has(quartz.id) ? 'unavailable' : ''}"><input type="checkbox" value="${escape(quartz.id)}" ${selected[kind].has(quartz.id) ? 'checked' : ''} ${selected[other].has(quartz.id) ? 'disabled' : ''}><span class="element-dot" style="--element:${colors[quartz.element]}">${escape(quartz.element)}</span><span>${escape(quartz.name)}<small>${Object.entries(quartz.attributes).map(([element, value]) => `${element} ${value}`).join(' · ')}${selected[other].has(quartz.id) ? ' · 已在另一列表选择' : ''}</small></span></label>`).join('') : '<p class="no-matches">没有找到匹配的回路</p>';
+    const items = entries.filter((quartz) => `${quartz.name}${quartz.element}`.toLowerCase().includes(query));
+    root.querySelector('.quartz-options').innerHTML = items.length ? items.map((quartz) => `<label class="quartz-option ${otherSelection.has(quartz.id) ? 'unavailable' : ''}"><input type="checkbox" value="${escape(quartz.id)}" ${selected[kind].has(quartz.id) ? 'checked' : ''} ${otherSelection.has(quartz.id) ? 'disabled' : ''}><span class="element-dot" style="--element:${colors[quartz.element]}">${escape(quartz.element)}</span><span>${escape(quartz.name)}<small>${Object.entries(quartz.attributes).map(([element, value]) => `${element} ${value}`).join(' · ')}${otherSelection.has(quartz.id) ? ' · 已在另一列表选择' : ''}</small></span></label>`).join('') : `<p class="no-matches">没有找到匹配的${noun}</p>`;
   }
   function render() {
     root.querySelector('.picker-count').textContent = selected[kind].size;
@@ -57,6 +60,11 @@ function createPicker(kind, title) {
   root.addEventListener('change', (event) => {
     if (event.target.type !== 'checkbox') return;
     if (event.target.checked) selected[kind].add(event.target.value); else selected[kind].delete(event.target.value);
+    if (isArts && event.target.checked) {
+      const inputs = [...document.querySelectorAll('.element-input')];
+      const attributes = completeAttributes(Object.fromEntries(inputs.map((input) => [input.dataset.element, Number(input.value)])), entries.filter((entry) => selected.arts.has(entry.id)));
+      inputs.forEach((input) => { input.value = attributes[input.dataset.element]; });
+    }
     pickers.forEach((picker) => picker.render()); changed();
   });
   root.addEventListener('click', (event) => {
@@ -103,7 +111,7 @@ $('#config-form').addEventListener('submit', async (event) => {
 $('#reset').addEventListener('click', () => {
   if (!data) return;
   document.querySelectorAll('.element-input').forEach((input) => { input.value = 0; });
-  selected.required.clear(); selected.excluded.clear(); pickers.forEach((picker) => picker.reset()); changed();
+  selected.required.clear(); selected.excluded.clear(); selected.arts.clear(); pickers.forEach((picker) => picker.reset()); changed();
 });
 document.addEventListener('click', (event) => { pickers.forEach((picker) => { if (!picker.details.contains(event.target)) picker.details.open = false; }); });
 
@@ -114,5 +122,5 @@ try {
   $('#character').addEventListener('change', () => { renderCharacter(); changed(); });
   $('#elements').innerHTML = data.elements.map((element) => `<label class="element-card" style="--element:${colors[element]}"><span class="element-symbol">${escape(element)}</span><input class="element-input" aria-label="${escape(element)}属性最低值" data-element="${escape(element)}" type="number" min="0" max="9007199254740991" step="1" value="0" required inputmode="numeric"></label>`).join('');
   $('#elements').addEventListener('input', changed);
-  renderCharacter(); createPicker('required', '选择必选回路'); createPicker('excluded', '选择排除回路'); $('#solve').disabled = false;
+  renderCharacter(); createPicker('arts', '选择魔法'); createPicker('required', '选择必选回路'); createPicker('excluded', '选择排除回路'); $('#solve').disabled = false;
 } catch (error) { $('#result-badge').textContent = '数据加载失败'; emptyResult('无法加载配置数据', error.message); }
