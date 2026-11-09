@@ -55,12 +55,25 @@ function createPicker(kind, title) {
   const noun = isArts ? '魔法' : '回路';
   const otherSelection = isArts ? new Set() : selected[kind === 'required' ? 'excluded' : 'required'];
   root.innerHTML = `<details class="picker"><summary>${title}<span class="picker-count">0</span><span class="chevron">⌄</span></summary><div class="picker-popover"><input type="search" placeholder="搜索${noun}名称或属性…" aria-label="搜索${title}" class="quartz-search"><div class="quartz-options"></div></div></details><div class="selected-tags"></div>`;
+  if (!isArts) {
+    root.insertAdjacentHTML('afterbegin', `<label class="picker-element-field" for="${kind}-element">元素属性<select id="${kind}-element"><option value="">不筛选</option>${data.elements.map((element) => `<option value="${escape(element)}">${escape(element)}</option>`).join('')}</select></label>`);
+  }
+  const elementFilter = root.querySelector('select');
   const details = root.querySelector('details');
   const search = root.querySelector('input');
+  function fitPopover() {
+    if (isArts || !details.open) return;
+    const bounds = root.querySelector('summary').getBoundingClientRect();
+    const below = Math.max(0, window.innerHeight - bounds.bottom - 18);
+    const above = Math.max(0, bounds.top - 18);
+    const openAbove = above > below;
+    details.classList.toggle('picker-above', openAbove);
+    details.style.setProperty('--popover-height', `${openAbove ? above : below}px`);
+  }
   function renderOptions() {
     const query = search.value.trim().toLowerCase();
-    const items = entries.filter((quartz) => `${quartz.name}${quartz.element}`.toLowerCase().includes(query));
-    root.querySelector('.quartz-options').innerHTML = items.length ? items.map((quartz) => `<label class="quartz-option ${otherSelection.has(quartz.id) ? 'unavailable' : ''}"><input type="checkbox" value="${escape(quartz.id)}" ${selected[kind].has(quartz.id) ? 'checked' : ''} ${otherSelection.has(quartz.id) ? 'disabled' : ''}><span class="element-dot" style="--element:${colors[quartz.element]}">${escape(quartz.element)}</span><span>${escape(quartz.name)}<small>${Object.entries(quartz.attributes).map(([element, value]) => `${element} ${value}`).join(' · ')}${otherSelection.has(quartz.id) ? ' · 已在另一列表选择' : ''}</small></span></label>`).join('') : `<p class="no-matches">没有找到匹配的${noun}</p>`;
+    const items = entries.filter((quartz) => (!elementFilter?.value || quartz.element === elementFilter.value) && `${quartz.name}${quartz.element}`.toLowerCase().includes(query));
+    root.querySelector('.quartz-options').innerHTML = items.length ? items.map((quartz) => `<label class="quartz-option ${otherSelection.has(quartz.id) ? 'unavailable' : ''}" ${otherSelection.has(quartz.id) ? 'title="已在另一列表选择"' : ''}><input type="checkbox" value="${escape(quartz.id)}" ${selected[kind].has(quartz.id) ? 'checked' : ''} ${otherSelection.has(quartz.id) ? 'disabled' : ''}>${isArts ? `<span class="element-dot" style="--element:${colors[quartz.element]}">${escape(quartz.element)}</span>` : ''}<span>${escape(quartz.name)}${isArts ? `<small>${Object.entries(quartz.attributes).map(([element, value]) => `${element} ${value}`).join(' · ')}</small>` : ''}</span></label>`).join('') : `<p class="no-matches">没有找到匹配的${noun}</p>`;
   }
   function render() {
     root.querySelector('.picker-count').textContent = selected[kind].size;
@@ -82,9 +95,14 @@ function createPicker(kind, title) {
     root.querySelector('summary').focus();
   });
   search.addEventListener('input', renderOptions);
-  details.addEventListener('toggle', () => { if (details.open) { pickers.filter((picker) => picker.details !== details).forEach((picker) => { picker.details.open = false; }); search.focus(); } });
+  elementFilter?.addEventListener('change', renderOptions);
+  details.addEventListener('toggle', () => { if (details.open) { pickers.filter((picker) => picker.details !== details).forEach((picker) => { picker.details.open = false; }); fitPopover(); search.focus({ preventScroll: true }); } });
+  if (!isArts) {
+    window.addEventListener('resize', fitPopover);
+    window.addEventListener('scroll', fitPopover);
+  }
   root.addEventListener('keydown', (event) => { if (event.key === 'Escape') { details.open = false; root.querySelector('summary').focus(); } });
-  const picker = { render, details, reset() { search.value = ''; details.open = false; render(); } };
+  const picker = { render, details, reset() { search.value = ''; if (elementFilter) elementFilter.value = ''; details.open = false; render(); } };
   pickers.push(picker); render();
 }
 
