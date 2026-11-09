@@ -5,11 +5,20 @@ const $ = (selector) => document.querySelector(selector);
 const colors = { 地: '#b38a43', 水: '#5389ac', 火: '#c56852', 风: '#58997b', 时: '#8b719d', 空: '#be9c42', 幻: '#ab7b99' };
 const selected = { required: new Set(), excluded: new Set(), arts: new Set() };
 let data, controller, revision = 0;
+let manualAttributes = {};
 const pickers = [];
 const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
 function emptyResult(title, message) {
   $('#results').innerHTML = `<div class="empty-state"><h3>${escape(title)}</h3><p>${escape(message)}</p></div>`;
+}
+
+function syncAttributes() {
+  const arts = data.arts.filter((art) => selected.arts.has(art.id));
+  const attributes = completeAttributes(manualAttributes, arts);
+  document.querySelectorAll('.element-input').forEach((input) => {
+    input.value = attributes[input.dataset.element] ?? 0;
+  });
 }
 
 function changed() {
@@ -18,7 +27,7 @@ function changed() {
   $('#solve').disabled = false;
   $('#solve').innerHTML = '计算';
   const count = [...document.querySelectorAll('.element-input')].filter((input) => Number(input.value) > 0).length;
-  $('#condition-summary').textContent = `${count} 项属性需求 · ${selected.required.size} 个必选 · ${selected.excluded.size} 个排除`;
+  $('#condition-summary').textContent = `${selected.arts.size} 个魔法 · ${count} 项属性需求 · ${selected.required.size} 个必选 · ${selected.excluded.size} 个排除`;
   $('#result-badge').textContent = '等待配置';
   emptyResult('尚未计算', '设置条件后点击「计算」。');
 }
@@ -60,17 +69,15 @@ function createPicker(kind, title) {
   root.addEventListener('change', (event) => {
     if (event.target.type !== 'checkbox') return;
     if (event.target.checked) selected[kind].add(event.target.value); else selected[kind].delete(event.target.value);
-    if (isArts && event.target.checked) {
-      const inputs = [...document.querySelectorAll('.element-input')];
-      const attributes = completeAttributes(Object.fromEntries(inputs.map((input) => [input.dataset.element, Number(input.value)])), entries.filter((entry) => selected.arts.has(entry.id)));
-      inputs.forEach((input) => { input.value = attributes[input.dataset.element]; });
-    }
+    if (isArts) syncAttributes();
     pickers.forEach((picker) => picker.render()); changed();
   });
   root.addEventListener('click', (event) => {
     const button = event.target.closest('[data-remove]');
     if (!button) return;
-    selected[kind].delete(button.dataset.remove); pickers.forEach((picker) => picker.render()); changed();
+    selected[kind].delete(button.dataset.remove);
+    if (isArts) syncAttributes();
+    pickers.forEach((picker) => picker.render()); changed();
     root.querySelector('summary').focus();
   });
   search.addEventListener('input', renderOptions);
@@ -92,7 +99,7 @@ $('#config-form').addEventListener('submit', async (event) => {
   if (!data) return;
   const values = [...document.querySelectorAll('.element-input')];
   if (values.some((input) => !Number.isSafeInteger(Number(input.value)) || Number(input.value) < 0)) { emptyResult('请检查属性值', '属性值需要是非负的安全整数。'); return; }
-  const request = { characterId: $('#character').value, minimumAttributes: Object.fromEntries(values.map((input) => [input.dataset.element, Number(input.value)])), requiredQuartzIds: [...selected.required], excludedQuartzIds: [...selected.excluded] };
+  const request = { artRequirements: data.arts.filter((art) => selected.arts.has(art.id)).map((art) => art.attributes), characterId: $('#character').value, minimumAttributes: { ...manualAttributes }, requiredQuartzIds: [...selected.required], excludedQuartzIds: [...selected.excluded] };
   controller?.abort(); controller = new AbortController();
   const currentRevision = ++revision;
   $('#solve').disabled = true; $('#solve').textContent = '正在求解…'; $('#result-badge').textContent = '求解中';
@@ -110,6 +117,7 @@ $('#config-form').addEventListener('submit', async (event) => {
 
 $('#reset').addEventListener('click', () => {
   if (!data) return;
+  manualAttributes = {};
   document.querySelectorAll('.element-input').forEach((input) => { input.value = 0; });
   selected.required.clear(); selected.excluded.clear(); selected.arts.clear(); pickers.forEach((picker) => picker.reset()); changed();
 });
@@ -121,6 +129,11 @@ try {
   $('#character').disabled = false;
   $('#character').addEventListener('change', () => { renderCharacter(); changed(); });
   $('#elements').innerHTML = data.elements.map((element) => `<label class="element-card" style="--element:${colors[element]}"><span class="element-symbol">${escape(element)}</span><input class="element-input" aria-label="${escape(element)}属性最低值" data-element="${escape(element)}" type="number" min="0" max="9007199254740991" step="1" value="0" required inputmode="numeric"></label>`).join('');
-  $('#elements').addEventListener('input', changed);
+  $('#elements').addEventListener('input', (event) => {
+    if (!event.target.matches('.element-input')) return;
+    manualAttributes[event.target.dataset.element] = Number(event.target.value);
+    changed();
+  });
+  $('#elements').addEventListener('change', syncAttributes);
   renderCharacter(); createPicker('arts', '选择魔法'); createPicker('required', '选择必选回路'); createPicker('excluded', '选择排除回路'); $('#solve').disabled = false;
 } catch (error) { $('#result-badge').textContent = '数据加载失败'; emptyResult('无法加载配置数据', error.message); }

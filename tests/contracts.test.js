@@ -18,17 +18,14 @@ test('仓库数据可用于所有选择列表，回路 ID 唯一且属性被完�
   });
 });
 
-test('魔法 CSV 跳过表头并完整解析，多选按最大需求补全且保留已有属性', async () => {
+test('魔法 CSV 跳过表头并完整解析各魔法独立需求', async () => {
   const text = await readFile(new URL('../sora-2nd-arts.csv', import.meta.url), 'utf8');
   const arts = parseArts('\uFEFF' + text);
   assert.equal(arts.length, text.trim().split(/\r?\n/).length - 1);
   assert.equal(new Set(arts.map((art) => art.id)).size, arts.length);
   const selected = ['石化吐息', '泰坦之咆哮'].map((id) => arts.find((art) => art.id === id));
   assert.deepEqual(selected[0].attributes, { 地: 3, 风: 2 });
-  const current = { 地: 1, 水: 8, 火: 0, 风: 5, 时: 0, 空: 0, 幻: 0 };
-  assert.deepEqual(completeAttributes(current, selected), { 地: 6, 水: 8, 火: 0, 风: 5, 时: 0, 空: 4, 幻: 0 });
-  assert.equal(current.地, 1);
-  assert.deepEqual(completeAttributes(current, []), current);
+  assert.deepEqual(selected[1].attributes, { 地: 6, 空: 4 });
 });
 
 test('接口拒绝未知角色，支持取消', async () => {
@@ -36,4 +33,14 @@ test('接口拒绝未知角色，支持取消', async () => {
   await assert.rejects(solveOrbment(request, { characters: [], quartz: [] }), /未知角色/);
   const controller = new AbortController(); controller.abort();
   await assert.rejects(solveOrbment(request, { characters: [], quartz: [], signal: controller.signal }), { name: 'AbortError' });
+});
+
+
+test('魔法属性汇总随选择变化，同时保留独立的手动要求', () => {
+  const manual = { 水: 8 };
+  const arts = [{ attributes: { 时: 9 } }, { attributes: { 时: 5, 空: 5 } }, { attributes: { 水: 3, 风: 3, 空: 3, 幻: 6 } }];
+  assert.deepEqual(completeAttributes(manual, arts), { 水: 8, 时: 9, 空: 5, 风: 3, 幻: 6 });
+  assert.deepEqual(completeAttributes(manual, arts.slice(1)), { 水: 8, 时: 5, 空: 5, 风: 3, 幻: 6 });
+  assert.deepEqual(completeAttributes(manual, []), { 水: 8 });
+  assert.deepEqual(manual, { 水: 8 });
 });

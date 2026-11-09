@@ -10,8 +10,8 @@ export async function solveOrbment(request, context) {
   context.signal?.throwIfAborted();
   const character = context.characters.find((c) => c.id === request.characterId);
   if (!character) throw new Error('未知角色');
-  const target = vector(request.minimumAttributes);
-  if (!target.every((v) => Number.isSafeInteger(v) && v >= 0)) throw new Error('属性值需要是非负的安全整数');
+  const targets = [request.minimumAttributes, ...(request.artRequirements ?? [])].map(vector);
+  if (!targets.every((target) => target.every((v) => Number.isSafeInteger(v) && v >= 0))) throw new Error('属性值需要是非负的安全整数');
   const required = new Set(request.requiredQuartzIds);
   const excluded = new Set(request.excludedQuartzIds);
   const all = context.quartz.map((q, index) => ({
@@ -25,7 +25,13 @@ export async function solveOrbment(request, context) {
   if (new Set(mandatory.map((q) => q.family)).size !== mandatory.length) return noSolution('条件冲突：必选回路属于同一功能系列。');
   if (mandatory.length > character.slots.length) return noSolution('必选回路数量超过孔位数量。');
   const available = all.filter((q) => !excluded.has(q.id));
-  const optional = available.filter((q) => !required.has(q.id) && q.values.some((v, i) => v > 0 && target[i] > 0));
+  const optional = available.filter((q) => !required.has(q.id) && q.values.some((v, i) => v > 0 && targets.some((target) => target[i] > 0)));
+
+  // 多目标优先尝试贡献较大的回路，仅改变遍历顺序，不删候选。
+  if (targets.filter((target) => target.some(Boolean)).length > 1) {
+    const score = (q) => targets.reduce((sum, target) => sum + target.reduce((n, v, e) => n + (v ? Math.min(q.values[e], v) / v : 0), 0), 0);
+    optional.sort((a, b) => score(b) - score(a) || a.index - b.index);
+  }
 
   // 按链成员关系分组，组内排列不产生新策略。单链中央孔也属于组内。
   const groups = [];
@@ -78,7 +84,10 @@ export async function solveOrbment(request, context) {
     })));
     return values;
   }
-  const satisfied = (config) => sums(config).some((values) => reaches(values, target));
+  const satisfied = (config) => {
+    const lines = sums(config);
+    return targets.every((target) => lines.some((values) => reaches(values, target)));
+  };
   const lower = new Map(available.map((q) => [q.id, available.filter((r) =>
     r.values.every((v, i) => v <= q.values[i]) && r.values.some((v, i) => v < q.values[i]),
   )]));
@@ -136,11 +145,32 @@ export async function solveOrbment(request, context) {
   const solutions = [], seen = new Set();
   let truncated = false;
   function* accept() {
-    const key = signature(placement);
-    if (seen.has(key) || !(yield* minimal(placement))) return;
+    // 将可行配置收缩到合法最小策略，避免先穷举大量可向下降级的配置。
+    let reduced = placement.map((items) => [...items]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      outer: for (let g = 0; g < reduced.length; g++) for (let i = 0; i < reduced[g].length; i++) {
+        const q = reduced[g][i];
+        if (required.has(q.id)) continue;
+        for (const replacement of [null, ...lower.get(q.id)]) {
+          yield;
+          const candidate = reduced.map((items) => [...items]);
+          if (replacement) candidate[g][i] = replacement;
+          else candidate[g].splice(i, 1);
+          if (satisfied(candidate) && legal(candidate)) {
+            reduced = candidate;
+            changed = true;
+            break outer;
+          }
+        }
+      }
+    }
+    const key = signature(reduced);
+    if (seen.has(key)) return;
     seen.add(key);
     if (solutions.length === 20) { truncated = true; return; }
-    const config = yield* canonical(placement);
+    const config = yield* canonical(reduced);
     const attributes = sums(config);
     const slots = config.flatMap((items, g) => fit(items, groups[g].slots));
     slots.sort((a, b) => character.slots.findIndex((s) => s.id === a.slotId) - character.slots.findIndex((s) => s.id === b.slotId));
@@ -148,9 +178,32 @@ export async function solveOrbment(request, context) {
       lines: character.lines.map((slotIds, i) => ({ slotIds: [...slotIds], attributes: Object.fromEntries(ELEMENTS.map((e, j) => [e, attributes[i][j]])) })),
     });
   }
-  function* extend(line, start) {
+  function* extend(target, line, start) {
     yield;
-    if (satisfied(placement)) { yield* accept(); return; }
+    const totals = sums(placement);
+    if (reaches(totals[line], target)) { yield* search(); return; }
+    // 所有目标都必须仍有可达链；上界忽略类别冲突，保持乐观。
+    const usedFamilies = new Set(placement.flat().map((q) => q.family));
+    const remaining = optional.filter((q) => !usedFamilies.has(q.family));
+    for (const goal of targets) {
+      if (totals.some((values) => reaches(values, goal))) continue;
+      const possible = character.lines.some((_, l) => {
+        const freeGroups = groups.flatMap((g, i) => g.lines.includes(l) && placement[i].length < g.slots.length ? [i] : []);
+        const capacity = freeGroups.reduce((n, g) => n + groups[g].slots.length - placement[g].length, 0);
+        return goal.every((value, e) => {
+          if (totals[l][e] >= value) return true;
+          const best = new Map();
+          for (const q of remaining) {
+            if (q.values[e] <= (best.get(q.family) ?? 0)) continue;
+            if (!freeGroups.some((g) => fit([...placement[g], q], groups[g].slots))) continue;
+            best.set(q.family, q.values[e]);
+          }
+          const upper = [...best.values()].sort((a, b) => b - a).slice(0, capacity).reduce((a, b) => a + b, 0);
+          return totals[l][e] + upper >= value;
+        });
+      });
+      if (!possible) return;
+    }
     const active = groups.flatMap((g, i) => g.lines.includes(line) ? [i] : []);
     const free = active.reduce((n, g) => n + groups[g].slots.length - placement[g].length, 0);
     if (!free) return;
@@ -163,19 +216,31 @@ export async function solveOrbment(request, context) {
     }
     for (let i = start; i < optional.length && !truncated; i++) {
       const q = optional[i];
+      if (!q.values.some((v, e) => v > 0 && current[e] < target[e])) continue;
       for (const g of active) {
         placement[g].push(q);
-        if (legal(placement)) yield* extend(line, i + 1);
+        if (legal(placement)) yield* extend(target, line, i + 1);
         placement[g].pop();
         if (truncated) return;
       }
     }
   }
+  // 每次补齐一个尚未满足的目标；不同魔法可以使用不同链。
+  const visited = new Set();
+  function* search() {
+    yield;
+    const key = JSON.stringify(placement.map((items) => items.map((q) => q.index).sort((a, b) => a - b)));
+    if (visited.has(key)) return;
+    visited.add(key);
+    const lines = sums(placement);
+    const target = targets.find((target) => !lines.some((values) => reaches(values, target)));
+    if (!target) { yield* accept(); return; }
+    for (let line = 0; line < character.lines.length && !truncated; line++) yield* extend(target, line, 0);
+  }
   function* placeRequired(i) {
     yield;
     if (i === mandatory.length) {
-      // 最小解的非必选回路都在某条达标链上，否则可直接删除。
-      for (let line = 0; line < character.lines.length && !truncated; line++) yield* extend(line, 0);
+      yield* search();
       return;
     }
     for (let g = 0; g < groups.length && !truncated; g++) {

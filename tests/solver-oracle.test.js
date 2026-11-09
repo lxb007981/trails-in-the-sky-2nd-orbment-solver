@@ -5,7 +5,7 @@ import { solveOrbment } from '../src/solver.js';
 // 独立逐孔穷举，不使用求解器的分组搜索、剪枝或合法性函数。
 const elements = [...'地水火风时空幻'];
 const values = (q) => elements.map((e) => q.attributes[e] ?? 0);
-function oracle(character, quartz, target, required, excluded) {
+function oracle(character, quartz, targets, required, excluded) {
   const slotGroups = character.slots.map((slot) => character.lines.flatMap((line, i) => line.includes(slot.id) ? [i] : []).join(','));
   const groups = [...new Set(slotGroups)];
   const groupItems = (config) => groups.map((g) => config.filter((q, i) => q && slotGroups[i] === g));
@@ -17,13 +17,13 @@ function oracle(character, quartz, target, required, excluded) {
     if (items.some((q) => excluded.includes(q.id))) return false;
     // 本测试数据明确约定防御1、防御2同系，其余独立。
     if (new Set(items.map((q) => q.name.startsWith('防御') ? '防御' : q.name)).size !== items.length) return false;
-    let reached = false;
+    const totals = [];
     for (const line of character.lines) {
       const lineItems = config.filter((q, i) => q && line.includes(character.slots[i].id));
       for (const suffix of ['之刃', '之盾', '之理']) if (lineItems.filter((q) => q.name.endsWith(suffix)).length > 1) return false;
-      if (elements.every((e) => lineItems.reduce((n, q) => n + (q.attributes[e] ?? 0), 0) >= (target[e] ?? 0))) reached = true;
+      totals.push(Object.fromEntries(elements.map((e) => [e, lineItems.reduce((n, q) => n + (q.attributes[e] ?? 0), 0)])));
     }
-    return reached;
+    return targets.every((target) => totals.some((line) => elements.every((e) => line[e] >= (target[e] ?? 0))));
   }
   const valid = new Map(), config = [];
   function enumerate(i) {
@@ -70,10 +70,12 @@ test('80组小规模条件与独立逐孔穷举的完整最小策略及名称优
       lines: trial % 2 ? [['c', 'a'], ['c', 'b']] : [['c', 'a', 'b']],
     };
     const target = { 地: random(6), 水: random(6) };
+    const artRequirements = trial % 3 ? [{ 地: random(6), 水: random(6) }] : [];
+    const targets = [target, ...artRequirements];
     const required = trial % 3 ? [] : [names[random(names.length)]];
     const excluded = trial % 4 ? [] : [names[random(names.length)]];
-    const { result: expected, attrKey } = oracle(character, quartz, target, required, excluded);
-    const actual = await solveOrbment({ characterId: 'test', minimumAttributes: target, requiredQuartzIds: required, excludedQuartzIds: excluded }, { characters: [character], quartz });
+    const { result: expected, attrKey } = oracle(character, quartz, targets, required, excluded);
+    const actual = await solveOrbment({ characterId: 'test', minimumAttributes: target, artRequirements, requiredQuartzIds: required, excludedQuartzIds: excluded }, { characters: [character], quartz });
     assert.ok(expected.size <= 20, '测试空间应能完整搜索');
     const found = new Map(actual.solutions.map((solution) => {
       const config = character.slots.map((slot) => quartz.find((q) => solution.slots.some((s) => s.slotId === slot.id && s.quartzId === q.id)) ?? null);

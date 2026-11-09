@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { solveOrbment } from '../src/solver.js';
-import { parseQuartz } from '../src/data.js';
+import { parseQuartz, parseArts } from '../src/data.js';
 import { quartzFamily } from '../src/quartz-families.js';
 
 const q = (name, attributes, element = Object.keys(attributes)[0]) => ({ id: name, name, attributes, element });
@@ -103,4 +103,36 @@ test('真实数据求解与运行中取消', async () => {
   const pending = solve(quartz, { 地: 20, 水: 20, 火: 20, 风: 20 }, [], [], characters.find((c) => c.id === 'kloe'), controller.signal);
   setTimeout(() => controller.abort(), 0);
   await assert.rejects(pending, { name: 'AbortError' });
+});
+
+
+test('艾丝蒂尔的三个魔法可分链配出，真实数据不再误报无解', async () => {
+  const quartz = parseQuartz(await readFile(new URL('../sora-2nd-quartz.csv', import.meta.url), 'utf8'));
+  const { characters } = JSON.parse(await readFile(new URL('../sora-2nd-orbments.json', import.meta.url), 'utf8'));
+  const arts = parseArts(await readFile(new URL('../sora-2nd-arts.csv', import.meta.url), 'utf8'));
+  const artRequirements = ['导力封锁', '时间加速改', '十二宫星环'].map((id) => arts.find((a) => a.id === id).attributes);
+  const c = characters.find((c) => c.id === 'estelle');
+  const example = [['省EP4', '薰风', '牙城', '阳炎'], ['省EP4', '行动力4', '驱动4', 'EP4']];
+  const totals = example.map((line) => Object.fromEntries([...'地水火风时空幻'].map((e) => [e, line.reduce((sum, id) => sum + (quartz.find((q) => q.id === id).attributes[e] ?? 0), 0)])));
+  assert.ok(artRequirements.every((target) => totals.some((line) => Object.entries(target).every(([e, v]) => line[e] >= v))));
+  const result = await solveOrbment({ characterId: c.id, minimumAttributes: {}, artRequirements, requiredQuartzIds: [], excludedQuartzIds: [] }, { characters, quartz });
+  assert.equal(result.status, 'solved');
+  for (const solution of result.solutions) {
+    assert.ok(artRequirements.every((target) => solution.lines.some((line) => Object.entries(target).every(([e, v]) => line.attributes[e] >= v))));
+  }
+});
+
+
+test('不同目标可分链，但单个目标不可跨链；手动属性与魔法同时约束', async () => {
+  const c = character([['c', 'a'], ['c', 'b']], { c: '火', a: '地', b: '水' });
+  const quartz = [q('甲', { 地: 1 }), q('乙', { 水: 1 })];
+  const request = { characterId: c.id, minimumAttributes: {}, artRequirements: [{ 地: 1 }, { 水: 1 }], requiredQuartzIds: [], excludedQuartzIds: [] };
+  const context = { characters: [c], quartz };
+  const result = await solveOrbment(request, context);
+  assert.deepEqual(result.solutions.map(names), [['乙', '甲'].sort()]);
+  assert.equal((await solveOrbment({ ...request, artRequirements: [{ 地: 1, 水: 1 }] }, context)).status, 'no-solution');
+  assert.equal((await solveOrbment({ ...request, minimumAttributes: { 地: 1, 水: 1 } }, context)).status, 'no-solution');
+  assert.equal((await solveOrbment({ ...request, excludedQuartzIds: ['乙'] }, context)).status, 'no-solution');
+  assert.deepEqual((await solveOrbment({ ...request, artRequirements: [] }, context)).solutions.map(names), [[]]);
+  await assert.rejects(solveOrbment({ ...request, artRequirements: [{ 水: -1 }] }, context), /非负/);
 });

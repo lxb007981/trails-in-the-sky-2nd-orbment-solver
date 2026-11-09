@@ -12,11 +12,12 @@ export function parseArts(text) {
   return parseQuartz(rows.filter(Boolean).map((row) => row.replaceAll(',', '\t')).join('\n'));
 }
 
+// 用于界面汇总；求解时保留每个魔法的独立需求。
 export function completeAttributes(current, arts) {
   const result = { ...current };
   for (const art of arts) {
     for (const [element, value] of Object.entries(art.attributes)) {
-      result[element] = Math.max(result[element] || 0, value);
+      result[element] = Math.max(result[element] ?? 0, value);
     }
   }
   return result;
