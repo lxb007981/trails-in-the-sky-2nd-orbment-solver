@@ -1,10 +1,11 @@
 import { loadData, completeAttributes } from './data.js';
 import { solveOrbment } from './solver.js';
+import { createSolverCache } from './solver-cache.js';
 
 const $ = (selector) => document.querySelector(selector);
 const colors = { 地: '#b38a43', 水: '#5389ac', 火: '#c56852', 风: '#58997b', 时: '#8b719d', 空: '#be9c42', 幻: '#ab7b99' };
 const selected = { required: new Set(), excluded: new Set(), arts: new Set() };
-let data, controller, revision = 0;
+let data, controller, cache, revision = 0;
 let manualAttributes = {};
 const pickers = [];
 const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -106,13 +107,24 @@ $('#config-form').addEventListener('submit', async (event) => {
   emptyResult('正在计算', '正在根据当前角色与条件请求求解器。');
   pickers.forEach((picker) => { picker.details.open = false; });
   try {
-    const response = await solveOrbment(request, { characters: data.characters, quartz: data.quartz, signal: controller.signal });
-    if (revision === currentRevision) renderSolutions(response);
+    const cached = cache.get(request);
+    const response = cached ?? await solveOrbment(request, { characters: data.characters, quartz: data.quartz, signal: controller.signal });
+    if (revision === currentRevision) {
+      renderSolutions(response);
+      if (!cached) cache.set(request, response);
+      if (cached) $('#result-badge').textContent += ' · 来自缓存';
+    }
   } catch (error) {
-    if (revision === currentRevision && error.name !== 'AbortError') { $('#result-badge').textContent = '请求失败'; emptyResult('暂时无法生成配置', error.message || '请稍后重试。'); }
+    if (revision === currentRevision && error.name !== 'AbortError') { $('#result-badge').textContent = '请求失败'; emptyResult('暂时无法生成配置', `${error.message || '请稍后重试。'} 可尝试点击「清除缓存」后重新计算。`); }
   } finally {
     if (revision === currentRevision) { $('#solve').disabled = false; $('#solve').innerHTML = '计算'; }
   }
+});
+
+$('#clear-cache').addEventListener('click', () => {
+  if (!cache) return;
+  changed();
+  cache.clear();
 });
 
 $('#reset').addEventListener('click', () => {
@@ -125,6 +137,8 @@ document.addEventListener('click', (event) => { pickers.forEach((picker) => { if
 
 try {
   data = await loadData();
+  cache = createSolverCache(data);
+  $('#clear-cache').disabled = false;
   $('#character').innerHTML = data.characters.map((character) => `<option value="${escape(character.id)}">${escape(character.name)}</option>`).join('');
   $('#character').disabled = false;
   $('#character').addEventListener('change', () => { renderCharacter(); changed(); });

@@ -33,6 +33,10 @@ input { min-width: 0; }
 .primary-button:hover { background: #195fc9; }
 .status-line { border: 1px solid var(--border); border-radius: 8px; background: #ffffffbf; padding: 8px 12px; color: var(--muted); margin-bottom: 24px; font-size: 14px; }
 .panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; min-width: 0; }
+.cache-panel { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; line-height: 1.7; }
+#cache-help { color: var(--muted); font-size: 13px; }
+#clear-cache { background: #a94318; border-color: #a94318; color: #fff; font-weight: 600; }
+#clear-cache:hover { background: #873513; }
 .quartz-fields { display: grid; gap: 14px; margin-bottom: 14px; }
 .picker { position: relative; }
 .picker summary { display: flex; align-items: center; gap: 8px; list-style: none; padding: 9px 12px; min-height: 42px; }
