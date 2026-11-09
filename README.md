@@ -10,7 +10,15 @@
 npm run dev
 ```
 
-访问 http://127.0.0.1:5173 。页面通过 fetch 读取数据，因此请通过 HTTP 启动，不要直接双击 HTML。静态部署时保留 index.html、src/ 和两个数据文件的相对路径即可。字体使用本机字体，无需访问外部字体服务。
+访问 http://127.0.0.1:5173 。页面通过 fetch 读取数据，因此请通过 HTTP 启动，不要直接双击 HTML。静态部署时保留 index.html、icon.png、src/ 和三份数据文件的相对路径即可。字体使用本机字体，无需访问外部字体服务。
+
+## 构建与 GitLab Pages 部署
+
+执行 `npm run build` 会清空并重新生成 `public/`，其中包含部署所需的全部静态文件，无需安装依赖。该目录已加入 Git 忽略规则。
+
+每次向 GitLab 仓库的 `main` 分支推送（包括合并后的推送），`.gitlab-ci.yml` 都会使用 Node.js 22 运行 `npm test`，测试成功后构建并通过 GitLab Pages 发布 `public/`。其他分支、标签和合并请求流水线不会触发部署。
+
+提交配置后，执行 `git push gitlab main` 即可触发首次部署。项目需有可用的 GitLab Runner 并启用 Pages；流水线成功后，在 GitLab 项目的 **Deploy > Pages** 查看实际的 `gitlab.io` 访问地址。资源均使用相对路径，兼容项目子路径与独立 Pages 域名。
 
 ## 已实现
 

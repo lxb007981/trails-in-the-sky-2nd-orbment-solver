@@ -1,0 +1,13 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "master"'
+    - when: never
+
+deploy-pages:
+  image: node:22-alpine
+  stage: deploy
+  script:
+    - npm test
+    - npm run build
+  pages:
+    publish: public

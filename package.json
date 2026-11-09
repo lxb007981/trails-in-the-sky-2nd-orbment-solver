@@ -2,5 +2,5 @@
   "name": "sora-2nd-orbment-solver",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "node scripts/serve.mjs", "test": "node --test" }
+  "scripts": { "dev": "node scripts/serve.mjs", "build": "node scripts/build.mjs", "test": "node --test" }
 }
