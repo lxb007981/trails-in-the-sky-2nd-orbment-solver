@@ -55,14 +55,13 @@ function createPicker(kind, title) {
   const noun = isArts ? '魔法' : '回路';
   const otherSelection = isArts ? new Set() : selected[kind === 'required' ? 'excluded' : 'required'];
   root.innerHTML = `<details class="picker"><summary>${title}<span class="picker-count">0</span><span class="chevron">⌄</span></summary><div class="picker-popover"><input type="search" placeholder="搜索${noun}名称或属性…" aria-label="搜索${title}" class="quartz-search"><div class="quartz-options"></div></div></details><div class="selected-tags"></div>`;
-  if (!isArts) {
-    root.insertAdjacentHTML('afterbegin', `<label class="picker-element-field" for="${kind}-element">元素属性<select id="${kind}-element"><option value="">不筛选</option>${data.elements.map((element) => `<option value="${escape(element)}">${escape(element)}</option>`).join('')}</select></label>`);
-  }
+  root.classList.add('element-picker');
+  root.insertAdjacentHTML('afterbegin', `<label class="picker-element-field" for="${kind}-element">元素属性<select id="${kind}-element"><option value="">不筛选</option>${data.elements.map((element) => `<option value="${escape(element)}">${escape(element)}</option>`).join('')}</select></label>`);
   const elementFilter = root.querySelector('select');
   const details = root.querySelector('details');
   const search = root.querySelector('input');
   function fitPopover() {
-    if (isArts || !details.open) return;
+    if (!details.open) return;
     const bounds = root.querySelector('summary').getBoundingClientRect();
     const below = Math.max(0, window.innerHeight - bounds.bottom - 18);
     const above = Math.max(0, bounds.top - 18);
@@ -97,10 +96,8 @@ function createPicker(kind, title) {
   search.addEventListener('input', renderOptions);
   elementFilter?.addEventListener('change', renderOptions);
   details.addEventListener('toggle', () => { if (details.open) { pickers.filter((picker) => picker.details !== details).forEach((picker) => { picker.details.open = false; }); fitPopover(); search.focus({ preventScroll: true }); } });
-  if (!isArts) {
-    window.addEventListener('resize', fitPopover);
-    window.addEventListener('scroll', fitPopover);
-  }
+  window.addEventListener('resize', fitPopover);
+  window.addEventListener('scroll', fitPopover);
   root.addEventListener('keydown', (event) => { if (event.key === 'Escape') { details.open = false; root.querySelector('summary').focus(); } });
   const picker = { render, details, reset() { search.value = ''; if (elementFilter) elementFilter.value = ''; details.open = false; render(); } };
   pickers.push(picker); render();

@@ -39,8 +39,8 @@ input { min-width: 0; }
 #clear-cache:hover { background: #873513; }
 .quartz-fields { display: grid; gap: 14px; margin-bottom: 14px; }
 .picker { position: relative; }
-#required-picker, #excluded-picker { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); column-gap: 10px; align-items: end; }
-#required-picker > .selected-tags, #excluded-picker > .selected-tags { grid-column: 1 / -1; }
+.element-picker { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); column-gap: 10px; align-items: end; }
+.element-picker > .selected-tags { grid-column: 1 / -1; }
 .picker-element-field { display: block; min-width: 0; color: var(--muted); font-size: 14px; }
 .picker-element-field select { display: block; margin-top: 4px; color: #1f2328; }
 .picker summary { display: flex; align-items: center; gap: 8px; list-style: none; padding: 9px 12px; min-height: 42px; }
@@ -52,9 +52,9 @@ input { min-width: 0; }
 .picker-popover { position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; right: 0; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; box-shadow: 0 6px 20px #1f23281a; }
 .quartz-search { width: 100%; padding: 9px 12px; }
 .quartz-options { max-height: 260px; overflow-y: auto; margin-top: 8px; }
-#required-picker .picker-popover, #excluded-picker .picker-popover { display: flex; flex-direction: column; max-height: var(--popover-height, 70vh); }
-#required-picker .quartz-search, #excluded-picker .quartz-search { flex-shrink: 0; }
-#required-picker .quartz-options, #excluded-picker .quartz-options { min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior-y: contain; }
+.element-picker .picker-popover { display: flex; flex-direction: column; max-height: var(--popover-height, 70vh); }
+.element-picker .quartz-search { flex-shrink: 0; }
+.element-picker .quartz-options { min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior-y: contain; }
 .picker-above .picker-popover { top: auto; bottom: calc(100% + 6px); }
 .quartz-option { display: flex; align-items: center; gap: 10px; padding: 9px 6px; cursor: pointer; }
 .quartz-option:hover { background: #f1f5fb; }
