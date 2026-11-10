@@ -90,12 +90,15 @@ input { min-width: 0; }
 .empty-state h3 { font-size: 14px; color: #1f2328; font-weight: 500; margin-bottom: 4px; }
 .solution { padding: 14px; margin-top: 14px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
 .solution h3 { margin-bottom: 12px; }
-.solution-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
-.solution-slots > div { border: 1px solid var(--border); padding: 10px; border-radius: 6px; }
-.solution-slots small { display: block; color: var(--muted); margin-bottom: 6px; }
+.solution-slots { display: flex; flex-wrap: wrap; gap: 12px; }
+.solution-slots > div { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 16px; min-width: min(220px, 100%); max-width: 100%; border: 1px solid var(--border); padding: 14px 16px; border-radius: 6px; }
+.solution-slots small { flex: 0 0 3em; color: var(--muted); }
 .solution-slots strong { font-size: 14px; font-weight: 500; }
-.solution-lines { color: var(--muted); font-size: 14px; line-height: 1.8; margin-top: 12px; }
-.solution-lines span { margin-left: 14px; }
+.quartz-name { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.quartz-attributes { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
+.quartz-attributes:empty { display: none; }
+.quartz-attribute { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.quartz-name .element-dot { width: 22px; height: 22px; font-size: 12px; }
 
 @media (max-width: 1050px) {
   .toolbar { align-items: flex-start; flex-direction: column; gap: 16px; }

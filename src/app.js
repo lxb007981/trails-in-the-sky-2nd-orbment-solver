@@ -106,11 +106,20 @@ function createPicker(kind, title) {
   pickers.push(picker); render();
 }
 
+function renderSolutionSlot(slot) {
+  const quartz = data.quartz.find((entry) => entry.id === slot.quartzId);
+  const attributes = data.elements.filter((element) => quartz?.attributes[element] > 0).map((element) =>
+    `<span class="quartz-attribute">${escape(element)} ${escape(quartz.attributes[element])}</span>`
+  ).join('');
+  const icon = quartz ? `<span class="element-dot" style="--element:${colors[quartz.element]}" title="主属性：${escape(quartz.element)}">${escape(quartz.element)}</span>` : '';
+  return `<div><small>${escape(slot.slotId === 'center' ? '中央孔' : slot.slotId)}</small><div class="quartz-name">${icon}<strong>${escape(quartz?.name || slot.quartzId)}</strong></div><div class="quartz-attributes">${attributes}</div></div>`;
+}
+
 function renderSolutions(response) {
   if (response.status === 'no-solution') { $('#result-badge').textContent = '暂无可行配置'; emptyResult('没有找到满足条件的方案', response.message || '请尝试调整目标属性或回路偏好。'); return; }
   if (response.status !== 'solved' || !Array.isArray(response.solutions) || !response.solutions.length) throw new Error('求解器返回了无效的结果格式');
   $('#result-badge').textContent = response.truncated ? '超过 20 个，已停止搜索' : `${response.solutions.length} 个方案`;
-  $('#results').innerHTML = response.solutions.map((solution, index) => `<article class="solution"><h3>配置方案 ${index + 1}</h3><div class="solution-slots">${solution.slots.map((slot) => `<div><small>${escape(slot.slotId === 'center' ? '中央孔' : slot.slotId)}</small><strong>${escape(data.quartz.find((quartz) => quartz.id === slot.quartzId)?.name || slot.quartzId)}</strong></div>`).join('')}</div><div class="solution-lines">${solution.lines.map((line, lineIndex) => `<p>链 ${lineIndex + 1} <span>${Object.entries(line.attributes).map(([element, value]) => `${escape(element)} ${escape(value)}`).join(' · ')}</span></p>`).join('')}</div></article>`).join('');
+  $('#results').innerHTML = response.solutions.map((solution, index) => `<article class="solution"><h3>配置方案 ${index + 1}</h3><div class="solution-slots">${solution.slots.map(renderSolutionSlot).join('')}</div></article>`).join('');
 }
 
 $('#config-form').addEventListener('submit', async (event) => {
