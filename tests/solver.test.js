@@ -83,6 +83,34 @@ test('限定孔允许组内重排，单链中央孔排列去重', async () => {
   assert.deepEqual(result.solutions[0].slots, [{ slotId: 'c', quartzId: '乙' }, { slotId: 'a', quartzId: '甲' }]);
 });
 
+test('多个限定孔的匹配保留通用孔给其他属性', async () => {
+  const c = character([['c', 'a', 'b', 'd']], { a: '地', b: '地', d: '水' });
+  const quartz = [q('甲', { 地: 1 }), q('乙', { 地: 2 }), q('丙', { 水: 1 }), q('丁', { 风: 1 }), q('戊', { 风: 2 })];
+  assert.equal((await solve(quartz, {}, ['甲', '乙', '丙', '丁'], [], c)).status, 'solved');
+  assert.equal((await solve(quartz, {}, ['甲', '丙', '丁', '戊'], [], c)).status, 'no-solution');
+});
+
+test('阵的四个目标魔法完整返回三个策略，选择顺序不影响结果', async () => {
+  const quartz = parseQuartz(await readFile(new URL('../sora-2nd-quartz.csv', import.meta.url), 'utf8'));
+  const { characters } = JSON.parse(await readFile(new URL('../sora-2nd-orbments.json', import.meta.url), 'utf8'));
+  const arts = parseArts(await readFile(new URL('../sora-2nd-arts.csv', import.meta.url), 'utf8'));
+  const artRequirements = ['十二宫星环', '风之跃行', '时间加速改', '大地之墙'].map((id) => arts.find((a) => a.id === id).attributes);
+  const expected = ['2-1', '3-1', '4-2'].map((slotId) => [
+    'center:牙城', '1-1:幻舞', '1-2:叶隐', `${slotId}:冥皇珠`,
+  ].sort().join('|')).sort();
+  for (const requirements of [artRequirements, [...artRequirements].reverse()]) {
+    const result = await solveOrbment({ characterId: 'zin', artRequirements: requirements,
+      requiredQuartzIds: [], excludedQuartzIds: [] }, { characters, quartz });
+    assert.equal(result.status, 'solved');
+    assert.equal(result.truncated, false);
+    assert.deepEqual(result.solutions.map((s) => s.slots.map((slot) => `${slot.slotId}:${slot.quartzId}`).sort().join('|')).sort(), expected);
+    for (const solution of result.solutions) {
+      assert.ok(artRequirements.every((target) => solution.lines.some((line) =>
+        Object.entries(target).every(([e, v]) => line.attributes[e] >= v))));
+    }
+  }
+});
+
 test('恰好20个完整返回，第21个不同最小策略立即截断', async () => {
   for (const count of [20, 21]) {
     const quartz = Array.from({ length: count }, (_, i) => q(`回路${i}`, { 地: i + 1, 水: count - i }));

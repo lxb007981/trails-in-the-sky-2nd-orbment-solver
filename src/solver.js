@@ -12,6 +12,8 @@ export async function solveOrbment(request, context) {
   if (!character) throw new Error('未知角色');
   const targets = [request.minimumAttributes ?? {}, ...(request.artRequirements ?? [])].map(vector);
   if (!targets.every((target) => target.every((v) => Number.isSafeInteger(v) && v >= 0))) throw new Error('属性值需要是非负的安全整数');
+  // 优先补齐需求最高的目标，尽早暴露短链和限定孔的瓶颈。
+  targets.sort((a, b) => b.reduce((n, v) => n + v, 0) - a.reduce((n, v) => n + v, 0));
   const required = new Set(request.requiredQuartzIds);
   const excluded = new Set(request.excludedQuartzIds);
   const all = context.quartz.map((q, index) => ({
@@ -44,6 +46,27 @@ export async function solveOrbment(request, context) {
   }
   const placement = groups.map(() => []);
 
+  // 限定孔仅要求单一属性，匹配可由计数精确判定，无需枚举孔位排列。
+  for (const group of groups) {
+    group.restricted = new Map();
+    group.unrestricted = 0;
+    for (const slot of group.slots) {
+      if (slot.required_element) group.restricted.set(slot.required_element, (group.restricted.get(slot.required_element) ?? 0) + 1);
+      else group.unrestricted++;
+    }
+  }
+  function canFit(items, group) {
+    if (items.length > group.slots.length) return false;
+    const counts = new Map();
+    let overflow = 0;
+    for (const q of items) {
+      const count = (counts.get(q.element) ?? 0) + 1;
+      counts.set(q.element, count);
+      if (count > (group.restricted.get(q.element) ?? 0)) overflow++;
+    }
+    return overflow <= group.unrestricted;
+  }
+
   // 至多七孔的匹配；替代回路后也允许组内重排以满足限定孔。
   function fit(items, slots) {
     if (items.length > slots.length) return null;
@@ -65,7 +88,7 @@ export async function solveOrbment(request, context) {
     const families = new Set();
     const categories = character.lines.map(() => new Set());
     for (let g = 0; g < groups.length; g++) {
-      if (!fit(config[g], groups[g].slots)) return false;
+      if (!canFit(config[g], groups[g])) return false;
       for (const q of config[g]) {
         if (families.has(q.family)) return false;
         families.add(q.family);
@@ -185,29 +208,35 @@ export async function solveOrbment(request, context) {
     // 所有目标都必须仍有可达链；上界忽略类别冲突，保持乐观。
     const usedFamilies = new Set(placement.flat().map((q) => q.family));
     const remaining = optional.filter((q) => !usedFamilies.has(q.family));
+    // 每条链的乐观上界与目标无关；各属性共享同一次孔位可行性检查。
+    const upperBounds = new Map();
+    function upperBound(l, e) {
+      if (!upperBounds.has(l)) {
+        const freeGroups = groups.flatMap((g, i) => g.lines.includes(l) && placement[i].length < g.slots.length ? [i] : []);
+        const capacity = freeGroups.reduce((n, g) => n + groups[g].slots.length - placement[g].length, 0);
+        const candidates = remaining.filter((q) => freeGroups.some((g) => canFit([...placement[g], q], groups[g])));
+        upperBounds.set(l, { capacity, candidates, values: [] });
+      }
+      const { capacity, candidates, values } = upperBounds.get(l);
+      if (values[e] !== undefined) return values[e];
+      const best = new Map();
+      for (const q of candidates) {
+        if (q.values[e] > (best.get(q.family) ?? 0)) best.set(q.family, q.values[e]);
+      }
+      return values[e] = totals[l][e] + [...best.values()]
+        .sort((a, b) => b - a).slice(0, capacity).reduce((a, b) => a + b, 0);
+    }
     for (const goal of targets) {
       if (totals.some((values) => reaches(values, goal))) continue;
       const possible = character.lines.some((_, l) => {
-        const freeGroups = groups.flatMap((g, i) => g.lines.includes(l) && placement[i].length < g.slots.length ? [i] : []);
-        const capacity = freeGroups.reduce((n, g) => n + groups[g].slots.length - placement[g].length, 0);
-        return goal.every((value, e) => {
-          if (totals[l][e] >= value) return true;
-          const best = new Map();
-          for (const q of remaining) {
-            if (q.values[e] <= (best.get(q.family) ?? 0)) continue;
-            if (!freeGroups.some((g) => fit([...placement[g], q], groups[g].slots))) continue;
-            best.set(q.family, q.values[e]);
-          }
-          const upper = [...best.values()].sort((a, b) => b - a).slice(0, capacity).reduce((a, b) => a + b, 0);
-          return totals[l][e] + upper >= value;
-        });
+        return goal.every((value, e) => totals[l][e] >= value || upperBound(l, e) >= value);
       });
       if (!possible) return;
     }
     const active = groups.flatMap((g, i) => g.lines.includes(line) ? [i] : []);
     const free = active.reduce((n, g) => n + groups[g].slots.length - placement[g].length, 0);
     if (!free) return;
-    const current = sums(placement)[line];
+    const current = totals[line];
     // 乐观上界仅剪去必定不可达分支，不用于近似返回。
     for (let e = 0; e < ELEMENTS.length; e++) {
       let max = 0;
