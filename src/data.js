@@ -13,8 +13,8 @@ export function parseArts(text) {
 }
 
 // 用于界面汇总；求解时保留每个魔法的独立需求。
-export function completeAttributes(current, arts) {
-  const result = { ...current };
+export function completeAttributes(arts) {
+  const result = {};
   for (const art of arts) {
     for (const [element, value] of Object.entries(art.attributes)) {
       result[element] = Math.max(result[element] ?? 0, value);

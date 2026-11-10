@@ -6,7 +6,6 @@ const $ = (selector) => document.querySelector(selector);
 const colors = { 地: '#b38a43', 水: '#5389ac', 火: '#c56852', 风: '#58997b', 时: '#8b719d', 空: '#be9c42', 幻: '#ab7b99' };
 const selected = { required: new Set(), excluded: new Set(), arts: new Set() };
 let data, controller, cache, revision = 0;
-let manualAttributes = {};
 const pickers = [];
 const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
@@ -16,9 +15,9 @@ function emptyResult(title, message) {
 
 function syncAttributes() {
   const arts = data.arts.filter((art) => selected.arts.has(art.id));
-  const attributes = completeAttributes(manualAttributes, arts);
-  document.querySelectorAll('.element-input').forEach((input) => {
-    input.value = attributes[input.dataset.element] ?? 0;
+  const attributes = completeAttributes(arts);
+  document.querySelectorAll('.element-value').forEach((output) => {
+    output.textContent = attributes[output.dataset.element] ?? 0;
   });
 }
 
@@ -27,7 +26,7 @@ function changed() {
   controller?.abort();
   $('#solve').disabled = false;
   $('#solve').innerHTML = '计算';
-  const count = [...document.querySelectorAll('.element-input')].filter((input) => Number(input.value) > 0).length;
+  const count = [...document.querySelectorAll('.element-value')].filter((output) => Number(output.textContent) > 0).length;
   $('#condition-summary').textContent = `${selected.arts.size} 个魔法 · ${count} 项属性需求 · ${selected.required.size} 个必选 · ${selected.excluded.size} 个排除`;
   $('#result-badge').textContent = '等待配置';
   emptyResult('尚未计算', '设置条件后点击「计算」。');
@@ -113,7 +112,7 @@ function renderSolutionSlot(slot) {
 }
 
 function renderSolutions(response) {
-  if (response.status === 'no-solution') { $('#result-badge').textContent = '暂无可行配置'; emptyResult('没有找到满足条件的方案', response.message || '请尝试调整目标属性或回路偏好。'); return; }
+  if (response.status === 'no-solution') { $('#result-badge').textContent = '暂无可行配置'; emptyResult('没有找到满足条件的方案', response.message || '请尝试调整所选魔法或回路偏好。'); return; }
   if (response.status !== 'solved' || !Array.isArray(response.solutions) || !response.solutions.length) throw new Error('求解器返回了无效的结果格式');
   $('#result-badge').textContent = response.truncated ? '超过 20 个，已停止搜索' : `${response.solutions.length} 个方案`;
   $('#results').innerHTML = response.solutions.map((solution, index) => `<article class="solution"><h3>配置方案 ${index + 1}</h3><div class="solution-slots">${solution.slots.map(renderSolutionSlot).join('')}</div></article>`).join('');
@@ -122,9 +121,7 @@ function renderSolutions(response) {
 $('#config-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!data) return;
-  const values = [...document.querySelectorAll('.element-input')];
-  if (values.some((input) => !Number.isSafeInteger(Number(input.value)) || Number(input.value) < 0)) { emptyResult('请检查属性值', '属性值需要是非负的安全整数。'); return; }
-  const request = { artRequirements: data.arts.filter((art) => selected.arts.has(art.id)).map((art) => art.attributes), characterId: $('#character').value, minimumAttributes: { ...manualAttributes }, requiredQuartzIds: [...selected.required], excludedQuartzIds: [...selected.excluded] };
+  const request = { artRequirements: data.arts.filter((art) => selected.arts.has(art.id)).map((art) => art.attributes), characterId: $('#character').value, requiredQuartzIds: [...selected.required], excludedQuartzIds: [...selected.excluded] };
   controller?.abort(); controller = new AbortController();
   const currentRevision = ++revision;
   $('#solve').disabled = true; $('#solve').textContent = '正在求解…'; $('#result-badge').textContent = '求解中';
@@ -153,9 +150,7 @@ $('#clear-cache').addEventListener('click', () => {
 
 $('#reset').addEventListener('click', () => {
   if (!data) return;
-  manualAttributes = {};
-  document.querySelectorAll('.element-input').forEach((input) => { input.value = 0; });
-  selected.required.clear(); selected.excluded.clear(); selected.arts.clear(); pickers.forEach((picker) => picker.reset()); changed();
+  selected.required.clear(); selected.excluded.clear(); selected.arts.clear(); pickers.forEach((picker) => picker.reset()); syncAttributes(); changed();
 });
 document.addEventListener('click', (event) => { pickers.forEach((picker) => { if (!picker.details.contains(event.target)) picker.details.open = false; }); });
 
@@ -166,12 +161,6 @@ try {
   $('#character').innerHTML = data.characters.map((character) => `<option value="${escape(character.id)}">${escape(character.name)}</option>`).join('');
   $('#character').disabled = false;
   $('#character').addEventListener('change', () => { renderCharacter(); changed(); });
-  $('#elements').innerHTML = data.elements.map((element) => `<label class="element-card" style="--element:${colors[element]}"><span class="element-symbol">${escape(element)}</span><input class="element-input" aria-label="${escape(element)}属性最低值" data-element="${escape(element)}" type="number" min="0" max="9007199254740991" step="1" value="0" required inputmode="numeric"></label>`).join('');
-  $('#elements').addEventListener('input', (event) => {
-    if (!event.target.matches('.element-input')) return;
-    manualAttributes[event.target.dataset.element] = Number(event.target.value);
-    changed();
-  });
-  $('#elements').addEventListener('change', syncAttributes);
+  $('#elements').innerHTML = data.elements.map((element) => `<div class="element-card" style="--element:${colors[element]}"><span class="element-symbol">${escape(element)}</span><output class="element-value" aria-label="${escape(element)}属性需求" data-element="${escape(element)}">0</output></div>`).join('');
   renderCharacter(); createPicker('arts', '选择魔法'); createPicker('required', '选择必选回路'); createPicker('excluded', '选择排除回路'); $('#solve').disabled = false;
 } catch (error) { $('#result-badge').textContent = '数据加载失败'; emptyResult('无法加载配置数据', error.message); }

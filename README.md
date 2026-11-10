@@ -41,14 +41,13 @@ npm run dev
 ```js
 {
   characterId: 'estelle',
-  minimumAttributes: { 地: 0, 水: 3, 火: 0, 风: 0, 时: 0, 空: 0, 幻: 0 },
   artRequirements: [{ 时: 9 }, { 水: 3, 风: 3, 空: 3, 幻: 6 }],
   requiredQuartzIds: ['防御1'],
   excludedQuartzIds: ['防御2']
 }
 ```
 
-`minimumAttributes` 和可选的 `artRequirements` 数组中每一项都是独立目标，每组需由同一条链满足，各组可以使用不同链。选择魔法会按各属性最大需求更新界面数值，取消选择时重新计算，并保留手动要求。自动汇总只用于显示；提交时 `minimumAttributes` 仅包含手动设置的属性，魔法需求通过 `artRequirements` 独立传递。回路 ID 使用数据中唯一的名称。`context.characters` 为原始角色数据；`context.quartz` 包含 `{ id, name, element, attributes }`，数组顺序决定等属性方案的展示优先级；`context.signal` 用于取消请求。搜索定期让出主线程，取消时抛出 `AbortError`。
+可选的 `minimumAttributes` 和 `artRequirements` 数组中每一项都是独立目标，每组需由同一条链满足，各组可以使用不同链。界面仅支持通过选择魔法确定目标属性值，按各属性最大需求只读显示，取消选择或重置时重新计算。自动汇总只用于显示；提交时仅通过 `artRequirements` 独立传递各魔法需求，不传入 `minimumAttributes`。回路 ID 使用数据中唯一的名称。`context.characters` 为原始角色数据；`context.quartz` 包含 `{ id, name, element, attributes }`，数组顺序决定等属性方案的展示优先级；`context.signal` 用于取消请求。搜索定期让出主线程，取消时抛出 `AbortError`。
 
 响应约定：
 

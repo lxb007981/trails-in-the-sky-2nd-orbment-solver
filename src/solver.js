@@ -10,7 +10,7 @@ export async function solveOrbment(request, context) {
   context.signal?.throwIfAborted();
   const character = context.characters.find((c) => c.id === request.characterId);
   if (!character) throw new Error('未知角色');
-  const targets = [request.minimumAttributes, ...(request.artRequirements ?? [])].map(vector);
+  const targets = [request.minimumAttributes ?? {}, ...(request.artRequirements ?? [])].map(vector);
   if (!targets.every((target) => target.every((v) => Number.isSafeInteger(v) && v >= 0))) throw new Error('属性值需要是非负的安全整数');
   const required = new Set(request.requiredQuartzIds);
   const excluded = new Set(request.excludedQuartzIds);

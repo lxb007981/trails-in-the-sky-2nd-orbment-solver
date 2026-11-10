@@ -115,7 +115,7 @@ test('艾丝蒂尔的三个魔法可分链配出，真实数据不再误报无�
   const example = [['省EP4', '薰风', '牙城', '阳炎'], ['省EP4', '行动力4', '驱动4', 'EP4']];
   const totals = example.map((line) => Object.fromEntries([...'地水火风时空幻'].map((e) => [e, line.reduce((sum, id) => sum + (quartz.find((q) => q.id === id).attributes[e] ?? 0), 0)])));
   assert.ok(artRequirements.every((target) => totals.some((line) => Object.entries(target).every(([e, v]) => line[e] >= v))));
-  const result = await solveOrbment({ characterId: c.id, minimumAttributes: {}, artRequirements, requiredQuartzIds: [], excludedQuartzIds: [] }, { characters, quartz });
+  const result = await solveOrbment({ characterId: c.id, artRequirements, requiredQuartzIds: [], excludedQuartzIds: [] }, { characters, quartz });
   assert.equal(result.status, 'solved');
   for (const solution of result.solutions) {
     assert.ok(artRequirements.every((target) => solution.lines.some((line) => Object.entries(target).every(([e, v]) => line.attributes[e] >= v))));

@@ -36,11 +36,9 @@ test('接口拒绝未知角色，支持取消', async () => {
 });
 
 
-test('魔法属性汇总随选择变化，同时保留独立的手动要求', () => {
-  const manual = { 水: 8 };
+test('魔法属性汇总随选择变化，清空选择后无属性要求', () => {
   const arts = [{ attributes: { 时: 9 } }, { attributes: { 时: 5, 空: 5 } }, { attributes: { 水: 3, 风: 3, 空: 3, 幻: 6 } }];
-  assert.deepEqual(completeAttributes(manual, arts), { 水: 8, 时: 9, 空: 5, 风: 3, 幻: 6 });
-  assert.deepEqual(completeAttributes(manual, arts.slice(1)), { 水: 8, 时: 5, 空: 5, 风: 3, 幻: 6 });
-  assert.deepEqual(completeAttributes(manual, []), { 水: 8 });
-  assert.deepEqual(manual, { 水: 8 });
+  assert.deepEqual(completeAttributes(arts), { 水: 3, 时: 9, 空: 5, 风: 3, 幻: 6 });
+  assert.deepEqual(completeAttributes(arts.slice(1)), { 水: 3, 时: 5, 空: 5, 风: 3, 幻: 6 });
+  assert.deepEqual(completeAttributes([]), {});
 });
