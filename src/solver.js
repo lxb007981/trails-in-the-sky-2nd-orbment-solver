@@ -165,7 +165,7 @@ export async function solveOrbment(request, context) {
     yield* visit(0);
     return best;
   }
-  const solutions = [], seen = new Set();
+  const solutions = [], seen = new Set(), seenQuartzSets = new Set();
   let truncated = false;
   function* accept() {
     // 将可行配置收缩到合法最小策略，避免先穷举大量可向下降级的配置。
@@ -192,8 +192,12 @@ export async function solveOrbment(request, context) {
     const key = signature(reduced);
     if (seen.has(key)) return;
     seen.add(key);
-    if (solutions.length === 20) { truncated = true; return; }
     const config = yield* canonical(reduced);
+    // 等属性代表确定后，整套回路相同的跨链/中央孔排列也只展示一次。
+    const quartzKey = JSON.stringify(config.flat().map((q) => q.id).sort());
+    if (seenQuartzSets.has(quartzKey)) return;
+    seenQuartzSets.add(quartzKey);
+    if (solutions.length === 20) { truncated = true; return; }
     const attributes = sums(config);
     const slots = config.flatMap((items, g) => fit(items, groups[g].slots));
     slots.sort((a, b) => character.slots.findIndex((s) => s.id === a.slotId) - character.slots.findIndex((s) => s.id === b.slotId));

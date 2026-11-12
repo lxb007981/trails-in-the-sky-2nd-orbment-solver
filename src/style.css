@@ -12,9 +12,9 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 main { max-width: 1240px; margin: 0 auto; padding: 28px 30px 48px; }
-.site-footer { padding: 0 16px 24px; text-align: center; font-size: 14px; }
-.site-footer a { color: var(--muted); text-underline-offset: 3px; }
-.site-footer a:hover { color: var(--blue); }
+.site-footer { display: flex; justify-content: center; margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--border); }
+.site-footer a { color: var(--muted); font-weight: 650; text-decoration: none; }
+.site-footer a:hover { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
 .site-footer a:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
 h1, h2, h3, p { margin: 0; }
 h1 { font-size: clamp(26px, 3.2vw, 44px); line-height: 1.25; letter-spacing: -1.2px; }

@@ -77,12 +77,13 @@ test('80组小规模条件与独立逐孔穷举的完整最小策略及名称优
     const { result: expected, attrKey } = oracle(character, quartz, targets, required, excluded);
     const actual = await solveOrbment({ characterId: 'test', minimumAttributes: target, artRequirements, requiredQuartzIds: required, excludedQuartzIds: excluded }, { characters: [character], quartz });
     assert.ok(expected.size <= 20, '测试空间应能完整搜索');
-    const found = new Map(actual.solutions.map((solution) => {
+    const found = new Set(actual.solutions.map((solution) => {
       const config = character.slots.map((slot) => quartz.find((q) => solution.slots.some((s) => s.slotId === slot.id && s.quartzId === q.id)) ?? null);
       const rank = config.filter(Boolean).map((q) => quartz.indexOf(q)).sort((a, b) => a - b).join(',');
-      return [attrKey(config), rank];
+      assert.equal(rank, expected.get(attrKey(config)), `排列必须是合法最小策略的等属性代表，case ${trial}`);
+      return rank;
     }));
     assert.equal(found.size, actual.solutions.length, `重复策略，case ${trial}`);
-    assert.deepEqual(found, expected, `case ${trial}: ${JSON.stringify({ character, quartz, target, required, excluded })}`);
+    assert.deepEqual(found, new Set(expected.values()), `case ${trial}: ${JSON.stringify({ character, quartz, target, required, excluded })}`);
   }
 });

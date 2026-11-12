@@ -36,16 +36,16 @@ test('刃盾理独立共存，同类别单链互斥，分支可分别装备', as
   const shields = ['白银之盾', '苍玉之盾'];
   assert.equal((await solve(quartz, {}, shields)).status, 'no-solution');
   const result = await solve(quartz, {}, shields, [], split);
-  assert.equal(result.solutions.length, 2);
+  assert.equal(result.solutions.length, 1);
   result.solutions.forEach((s) => assert.ok(s.slots.every((slot) => slot.slotId !== 'c')));
 });
 
-test('目标不跨链拼凑；中央属性共享；多链中央移动保留不同策略', async () => {
+test('目标不跨链拼凑；中央属性共享；多链中央移动按整套回路去重', async () => {
   const quartz = [q('甲', { 地: 1 }), q('乙', { 水: 1 })];
   const c = character([['c', 'a'], ['c', 'b']], { c: '火', a: '地', b: '水' });
   assert.equal((await solve(quartz, { 地: 1, 水: 1 }, [], [], c)).status, 'no-solution');
   const result = await solve(quartz.slice(0, 1), { 地: 1 }, [], [], split);
-  assert.equal(result.solutions.length, 3);
+  assert.equal(result.solutions.length, 1);
   const center = result.solutions.find((s) => s.slots[0].slotId === 'c');
   assert.ok(center.lines.every((l) => l.attributes.地 === 1));
 });
@@ -90,7 +90,7 @@ test('多个限定孔的匹配保留通用孔给其他属性', async () => {
   assert.equal((await solve(quartz, {}, ['甲', '丙', '丁', '戊'], [], c)).status, 'no-solution');
 });
 
-test('阵的四个目标魔法完整返回三个策略，选择顺序不影响结果', async () => {
+test('阵的四个目标魔法的三个分支摆法合并为一个策略，选择顺序不影响结果', async () => {
   const quartz = parseQuartz(await readFile(new URL('../sora-2nd-quartz.csv', import.meta.url), 'utf8'));
   const { characters } = JSON.parse(await readFile(new URL('../sora-2nd-orbments.json', import.meta.url), 'utf8'));
   const arts = parseArts(await readFile(new URL('../sora-2nd-arts.csv', import.meta.url), 'utf8'));
@@ -103,7 +103,8 @@ test('阵的四个目标魔法完整返回三个策略，选择顺序不影响�
       requiredQuartzIds: [], excludedQuartzIds: [] }, { characters, quartz });
     assert.equal(result.status, 'solved');
     assert.equal(result.truncated, false);
-    assert.deepEqual(result.solutions.map((s) => s.slots.map((slot) => `${slot.slotId}:${slot.quartzId}`).sort().join('|')).sort(), expected);
+    assert.equal(result.solutions.length, 1);
+    assert.ok(expected.includes(result.solutions[0].slots.map((slot) => `${slot.slotId}:${slot.quartzId}`).sort().join('|')));
     for (const solution of result.solutions) {
       assert.ok(artRequirements.every((target) => solution.lines.some((line) =>
         Object.entries(target).every(([e, v]) => line.attributes[e] >= v))));
@@ -118,6 +119,18 @@ test('恰好20个完整返回，第21个不同最小策略立即截断', async (
     assert.equal(result.solutions.length, 20);
     assert.equal(result.truncated, count === 21);
     if (count === 21) assert.equal(result.message, '超过 20 个，已停止搜索');
+  }
+});
+
+test('跨链重复排列不占用20个名额，等属性替代后仍按回路集合去重', async () => {
+  for (const count of [20, 21]) {
+    const quartz = Array.from({ length: count }, (_, i) => q(`回路${i}`, { 地: i + 1, 水: count - i }));
+    quartz.push(q('等属性替代', quartz[0].attributes));
+    const result = await solve(quartz, { 地: 1, 水: 1 }, [], [], split);
+    assert.equal(result.solutions.length, 20);
+    assert.equal(new Set(result.solutions.map((s) => JSON.stringify(names(s)))).size, 20);
+    assert.equal(result.truncated, count === 21);
+    assert.ok(result.solutions.every((s) => !names(s).includes('等属性替代')));
   }
 });
 

@@ -1,7 +1,7 @@
 export const CACHE_LIMIT = 500;
 export const CACHE_STORAGE_KEY = 'orbment-solver-cache';
 // 求解规则或返回格式改变时递增，防止复用旧算法的结果。
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const elements = [...'地水火风时空幻'];
 const vector = (attributes = {}) => elements.map((element) => attributes[element] ?? 0);
 
