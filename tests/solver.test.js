@@ -30,6 +30,31 @@ test('功能系列明确包含高级珠，且跨链互斥', async () => {
   assert.equal((await solve(quartz, {}, quartz.map((v) => v.id), [], split)).status, 'no-solution');
 });
 
+test('阳炎与异香全局互斥，必选及自动搜索均不可共存', async () => {
+  const quartz = [q('阳炎', { 幻: 4 }), q('异香', { 风: 3 })];
+  for (const c of [single, split]) {
+    const conflict = await solve(quartz, {}, ['阳炎', '异香'], [], c);
+    assert.equal(conflict.status, 'no-solution');
+    assert.match(conflict.message, /阳炎和异香不能共存/);
+    for (const required of [[], ['阳炎'], ['异香']]) {
+      const result = await solveOrbment({ characterId: c.id, artRequirements: [{ 幻: 4 }, { 风: 3 }],
+        requiredQuartzIds: required, excludedQuartzIds: [] }, { characters: [c], quartz });
+      assert.equal(result.status, 'no-solution');
+    }
+    for (const name of ['阳炎', '异香']) {
+      assert.deepEqual((await solve(quartz, {}, [name], [], c)).solutions.map(names), [[name]]);
+    }
+  }
+});
+
+test('向下替换及等属性去重不能引入阳炎与异香冲突', async () => {
+  for (const value of [3, 4]) {
+    const quartz = [q('阳炎', { 幻: 4 }), q('异香', { 风: 3 }), q('替代', { 风: value })];
+    const result = await solve(quartz, { 风: 3 }, ['阳炎']);
+    assert.deepEqual(result.solutions.map(names), [['阳炎', '替代'].sort()]);
+  }
+});
+
 test('刃盾理独立共存，同类别单链互斥，分支可分别装备', async () => {
   const quartz = [q('白银之盾', { 幻: 3 }), q('冻结之刃', { 水: 2 }), q('冻结之理', { 水: 5 }), q('苍玉之盾', { 水: 3 })];
   assert.equal((await solve(quartz, {}, quartz.slice(0, 3).map((v) => v.id))).status, 'solved');

@@ -4,6 +4,7 @@ const ELEMENTS = [...'地水火风时空幻'];
 const vector = (attributes) => ELEMENTS.map((e) => attributes[e] ?? 0);
 const reaches = (values, target) => values.every((v, i) => v >= target[i]);
 const noSolution = (message) => ({ status: 'no-solution', solutions: [], message });
+const hasScentConflict = (items) => items.some((q) => q.name === '阳炎') && items.some((q) => q.name === '异香');
 
 /** 精确搜索规则中的不可删、不可向下替换策略。空孔省略，所有链均返回。 */
 export async function solveOrbment(request, context) {
@@ -24,6 +25,7 @@ export async function solveOrbment(request, context) {
   if ([...required].some((id) => excluded.has(id))) return noSolution('条件冲突：必选回路同时被排除。');
   if ([...required].some((id) => !byId.has(id))) return noSolution('条件冲突：必选回路不存在。');
   const mandatory = [...required].map((id) => byId.get(id));
+  if (hasScentConflict(mandatory)) return noSolution('条件冲突：阳炎和异香不能共存。');
   if (new Set(mandatory.map((q) => q.family)).size !== mandatory.length) return noSolution('条件冲突：必选回路属于同一功能系列。');
   if (mandatory.length > character.slots.length) return noSolution('必选回路数量超过孔位数量。');
   const available = all.filter((q) => !excluded.has(q.id));
@@ -85,6 +87,7 @@ export async function solveOrbment(request, context) {
     return assign(0) ? result : null;
   }
   function legal(config) {
+    if (hasScentConflict(config.flat())) return false;
     const families = new Set();
     const categories = character.lines.map(() => new Set());
     for (let g = 0; g < groups.length; g++) {
